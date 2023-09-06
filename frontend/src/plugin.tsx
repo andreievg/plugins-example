@@ -1,7 +1,6 @@
 import React, { Suspense, useEffect } from 'react';
 import { create } from 'zustand';
 import { Invoice } from './Invoices';
-import { Order } from './Orders';
 
 // PLUGIN TYPES
 type CommonPluginProperties = { name: string };
@@ -11,12 +10,7 @@ export type InvoicesPlugin = {
   pluginType: 'InvoicePlugin';
 } & CommonPluginProperties;
 
-export type OrderPlugin = {
-  Component: React.ComponentType<{ data: { orderNode: Order } }>;
-  pluginType: 'OrderPlugin';
-} & CommonPluginProperties;
-
-type PluginType = InvoicesPlugin | OrderPlugin;
+type PluginType = InvoicesPlugin;
 
 // PLUGIN PROVIDER
 type PluginProvider = {
