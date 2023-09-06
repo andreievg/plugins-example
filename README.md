@@ -62,7 +62,7 @@ https://github.com/andreievg/plugins-example/blob/091f79a1289e4dd2bb6759f8efd160
 This repo is meant to shown an example of a pattern for plugins for your a web application. 
 It's hard to know which areas will need to be extandable/pluggable in the future, if a simple pattern is available, it shoud be straight forward to extend application with a plugin wherer it's applicable.
 
-[This diff shows the changes that are required to add a new plugin inteface](https://github.com/andreievg/plugins-example/compare/e50687be80a20a81e6012bd86554d9384d4e8bce..main)
+[This diff shows the changes that are required to add a new plugin inteface](https://github.com/andreievg/plugins-example/compare/e50687be80a20a81e6012bd86554d9384d4e8bce..091f79a1289e4dd2bb6759f8efd160f00d924fb3)
 
 [And this diff shows the changes required for adding plugin implementation](https://github.com/andreievg/plugins-example/compare/d009b355d5d4cfed18a858b393967a310fec8b47..e50687be80a20a81e6012bd86554d9384d4e8bce) 
 
