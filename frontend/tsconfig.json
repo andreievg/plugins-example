@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "target": "es2015",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "jsx": "react",
+
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    // Required for webpackExclude magic comment
+    // You may need to remove comments from bundle in anoter way (Terser or UglifyJS plugin)
+    "removeComments": false,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    "noPropertyAccessFromIndexSignature": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["./typings", "./node_modules/@types"]
+  }
+}
