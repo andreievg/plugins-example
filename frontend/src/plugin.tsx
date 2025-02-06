@@ -11,12 +11,26 @@ export type InvoicesPlugin = {
   pluginType: 'InvoicePlugin';
 } & CommonPluginProperties;
 
+export type AllPlugins = {
+  Component: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
+  AllComponents: {
+    Invoice?: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
+    columns?: {
+      invoice?: {
+        Loader: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
+        columns: { key: string }[];
+      };
+    };
+  };
+  pluginType: 'All';
+} & CommonPluginProperties;
+
 export type OrderPlugin = {
   Component: React.ComponentType<{ data: { orderNode: Order } }>;
   pluginType: 'OrderPlugin';
 } & CommonPluginProperties;
 
-type PluginType = InvoicesPlugin | OrderPlugin;
+type PluginType = InvoicesPlugin | OrderPlugin | AllPlugins;
 
 // PLUGIN PROVIDER
 type PluginProvider = {
@@ -58,20 +72,21 @@ export const useInitPlugins = () => {
   };
 
   // For hot reloading in dev mode plugins will be loaded from ./plugin folder
-  const initLocalPlugins = async () => {
-    for (const plugin of LOCAL_PLUGINS) {
-      import(
-        // Webpack will actually try to load everything in plugins directory
-        // which causes issues
-        /* webpackExclude: /node_modules/ */
-        `./plugins/${plugin.fileName}/src/${plugin.fileName}`
-      ).then((plugin) => addPlugin(plugin.default));
-    }
-  };
+  // const initLocalPlugins = async () => {
+  //   for (const plugin of LOCAL_PLUGINS) {
+  //     import(
+  //       // Webpack will actually try to load everything in plugins directory
+  //       // which causes issues
+  //       /* webpackExclude: /node_modules/ */
+  //       `./plugins/${plugin.fileName}/src/${plugin.fileName}`
+  //     ).then((plugin) => addPlugin(plugin.default));
+  //   }
+  // };
 
   useEffect(() => {
-    if (process.env['NODE_ENV'] === 'production') initRemotePlugins();
-    else initLocalPlugins();
+    // if (process.env['NODE_ENV'] === 'production') initRemotePlugins();
+    // else initLocalPlugins();
+    initRemotePlugins();
   }, []);
 };
 
@@ -85,12 +100,7 @@ export const loadReactPlugin: LoadReactPlugin = (plugins, input) => {
   return (
     <>
       {plugins.map(({ Component, name }) => {
-        const ReactComponent = React.lazy(
-          // Ract.lazy expect component as default export
-          async () => ({
-            default: Component,
-          })
-        );
+        const ReactComponent = Component;
 
         // Plugins should also have version, either checked here, in loadPlugin,
         // probably here with version passed on as paramter ? since version will be close to the area
