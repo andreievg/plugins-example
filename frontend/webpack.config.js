@@ -4,7 +4,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ModuleFederationPlugin = webpack.container.ModuleFederationPlugin;
 const path = require('path');
-const dependencies = require('./package.json').devDependencies;
+const { dependencies } = require('./package.json');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const fs = require('fs');
 
@@ -76,10 +76,12 @@ module.exports = (env) => {
         },
         {
           test: /\.css$/,
+          exclude: /node_modules/,
           use: ['style-loader', 'css-loader'],
         },
         {
           test: /\.(woff(2)?|ttf|eot)$/,
+          exclude: /node_modules/,
           type: 'asset/resource',
           generator: {
             filename: './fonts/[name][ext]',
@@ -87,6 +89,7 @@ module.exports = (env) => {
         },
         {
           test: /\.(png|svg|jpg|jpeg|gif)$/i,
+          exclude: /node_modules/,
           type: 'asset/resource',
         },
       ],
@@ -105,9 +108,7 @@ module.exports = (env) => {
         name: 'host',
         shared: [
           {
-            '@openmsupply-client/common': {
-              eager: true,
-            },
+            ...dependencies,
             react: {
               singleton: true,
               eager: true,

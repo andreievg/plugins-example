@@ -8,12 +8,44 @@ const App: FC = () => {
   return <Lists />;
 };
 
+export type Column<T> = {
+  header: string;
+  Column: React.ComponentType<{ row: T }>;
+};
 const Lists = () => (
   <>
     <Invoices
       invoices={[
-        { id: 'one', type: 'Inbound', status: 'Draft' },
-        { id: 'two', type: 'Outbound', status: 'Final' },
+        {
+          id: 'one',
+          type: 'Inbound',
+          status: 'Draft',
+          data: [
+            {
+              lineId: 'ten',
+              value: 10,
+            },
+            {
+              lineId: 'twenty',
+              value: 20,
+            },
+          ],
+        },
+        {
+          id: 'two',
+          type: 'Outbound',
+          status: 'Final',
+          data: [
+            {
+              lineId: 'five',
+              value: 5,
+            },
+            {
+              lineId: 'two',
+              value: 2,
+            },
+          ],
+        },
       ]}
     />
     <Orders

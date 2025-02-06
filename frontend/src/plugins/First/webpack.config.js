@@ -4,14 +4,14 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const prod = process.env.NODE_ENV === 'production';
 const { dependencies } = require('../../../package.json');
 const path = require('path');
+const { name } = require('./package.json');
 
 module.exports = {
   mode: prod ? 'production' : 'development',
-  entry: './src/index.ts',
+  entry: './src/plugin.tsx',
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    library: 'module',
-    libraryTarget: 'umd',
+    path: path.resolve(__dirname, 'dist', name),
+    asyncChunks: false,
   },
   resolve: {
     extensions: ['.js', '.css', '.ts', '.tsx'],
@@ -36,8 +36,8 @@ module.exports = {
   devtool: prod ? undefined : 'source-map',
   plugins: [
     new ModuleFederationPlugin({
-      name: 'First',
-      exposes: { plugin: './src/First' },
+      name,
+      exposes: { plugin: './src/plugin' },
       shared: {
         ...dependencies,
         react: {

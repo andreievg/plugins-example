@@ -1,56 +1,38 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { create } from 'zustand';
-import { Invoice } from './Invoices';
+import { Invoice, InvoiceColumnData } from './Invoices';
 import { Order } from './Orders';
+import { mergeWith, isArray } from 'lodash';
+import { Column } from './App';
 
 // PLUGIN TYPES
-type CommonPluginProperties = { name: string };
-
-export type InvoicesPlugin = {
-  Component: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
-  pluginType: 'InvoicePlugin';
-} & CommonPluginProperties;
-
-export type AllPlugins = {
-  Component: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
-  AllComponents: {
-    Invoice?: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
-    columns?: {
-      invoice?: {
-        Loader: React.ComponentType<{ data: { invoiceNode: Invoice } }>;
-        columns: { key: string }[];
-      };
-    };
+export type Plugins = {
+  invoice?: React.ComponentType<{ invoice: Invoice }>[];
+  order?: React.ComponentType<{ order: Order }>[];
+  invoiceColumns?: {
+    StateLoader: React.ComponentType<{ invoice: Invoice }>[];
+    columns: Column<InvoiceColumnData>[];
   };
-  pluginType: 'All';
-} & CommonPluginProperties;
-
-export type OrderPlugin = {
-  Component: React.ComponentType<{ data: { orderNode: Order } }>;
-  pluginType: 'OrderPlugin';
-} & CommonPluginProperties;
-
-type PluginType = InvoicesPlugin | OrderPlugin | AllPlugins;
+};
 
 // PLUGIN PROVIDER
 type PluginProvider = {
-  plugins: PluginType[];
-  addPlugin: (_: PluginType) => void;
-  getPlugins: <PT extends PluginType['pluginType']>(
-    pluginType: PT
-  ) => Extract<PluginType, { pluginType: PT }>[];
+  plugins: Plugins;
+  addPlugins: (_: Plugins) => void;
 };
 
-export const usePluginProvider = create<PluginProvider>((set, get) => {
+export const usePluginProvider = create<PluginProvider>((set) => {
   return {
-    plugins: [],
-    addPlugin: (plugin: PluginType) => set(({ plugins }) => ({ plugins: [...plugins, plugin] })),
-    getPlugins: <PT extends PluginType['pluginType']>(pluginType: PT) => {
-      const plugins = get().plugins;
-      return plugins.filter(
-        (plugin): plugin is Extract<PluginType, { pluginType: PT }> =>
-          plugin.pluginType === pluginType
-      );
+    plugins: {},
+    addPlugins: (plugins) => {
+      set((state) => {
+        // Here can determine if version is suitable
+        const newPlugins = mergeWith(state.plugins, plugins, (a, b) =>
+          isArray(a) ? a.concat(b) : undefined
+        );
+
+        return { ...state, plugins: newPlugins };
+      });
     },
   };
 });
@@ -61,64 +43,40 @@ export const usePluginProvider = create<PluginProvider>((set, get) => {
 declare const LOCAL_PLUGINS: { fileName: string }[];
 
 export const useInitPlugins = () => {
-  const { addPlugin } = usePluginProvider();
+  const { addPlugins } = usePluginProvider();
 
   const initRemotePlugins = async () => {
     const plugins = (await (await fetch('http://localhost:8080/plugin/list')).json()) as string[];
 
     for (const plugin of plugins) {
-      loadPlugin(plugin).then(addPlugin);
+      let pluginBundle = await loadPlugin(plugin);
+      addPlugins(pluginBundle);
     }
   };
 
   // For hot reloading in dev mode plugins will be loaded from ./plugin folder
-  // const initLocalPlugins = async () => {
-  //   for (const plugin of LOCAL_PLUGINS) {
-  //     import(
-  //       // Webpack will actually try to load everything in plugins directory
-  //       // which causes issues
-  //       /* webpackExclude: /node_modules/ */
-  //       `./plugins/${plugin.fileName}/src/${plugin.fileName}`
-  //     ).then((plugin) => addPlugin(plugin.default));
-  //   }
-  // };
+  const initLocalPlugins = async () => {
+    for (const plugin of LOCAL_PLUGINS) {
+      let pluginBundle = await import(
+        // Webpack will actually try to load everything in plugins directory
+        // which causes issues
+        /* webpackExclude: /node_modules/ */
+        `./plugins/${plugin.fileName}/src/plugin.tsx`
+      );
+      addPlugins(pluginBundle.default);
+    }
+  };
 
   useEffect(() => {
-    // if (process.env['NODE_ENV'] === 'production') initRemotePlugins();
-    // else initLocalPlugins();
-    initRemotePlugins();
+    if (process.env['NODE_ENV'] === 'production') initRemotePlugins();
+    else initLocalPlugins();
   }, []);
 };
 
 // LOAD REACT PLUGIN
-type LoadReactPlugin = <I>(
-  plugins: ({ Component: React.ComponentType<{ data: I }> } & CommonPluginProperties)[],
-  input: I
-) => React.JSX.Element;
-
-export const loadReactPlugin: LoadReactPlugin = (plugins, input) => {
-  return (
-    <>
-      {plugins.map(({ Component, name }) => {
-        const ReactComponent = Component;
-
-        // Plugins should also have version, either checked here, in loadPlugin,
-        // probably here with version passed on as paramter ? since version will be close to the area
-        // where API for plugin is defiened ?
-        return (
-          <Suspense>
-            <ReactComponent key={name} data={input} />
-          </Suspense>
-        );
-      })}
-    </>
-  );
-};
 
 // LOAD REMOTE PLUGIN
-
-//
-type Factory = Promise<() => { default: PluginType }>;
+type Factory = Promise<() => { default: Plugins }>;
 
 type Container = {
   get: (module: string) => Factory;
@@ -139,6 +97,7 @@ export const fetchPlugin = (plugin: string): Promise<Container> =>
     script.onload = () => {
       // The script is now loaded on window using the name defined within the remote
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log(plugin);
       const container = window[plugin as any] as unknown as Container;
       if (!container) reject(new Error(`Failed to load plugin: ${plugin}`));
 
@@ -156,7 +115,7 @@ export const fetchPlugin = (plugin: string): Promise<Container> =>
 declare const __webpack_init_sharing__: (shareScope: string) => Promise<void>;
 declare const __webpack_share_scopes__: Record<string, unknown>;
 
-export const loadPlugin = async (plugin: string): Promise<PluginType> => {
+export const loadPlugin = async (plugin: string): Promise<Plugins> => {
   try {
     // Check if this plugin has already been loaded
     if (!(plugin in window)) {
@@ -185,4 +144,11 @@ export const loadPlugin = async (plugin: string): Promise<PluginType> => {
     console.error(e);
     throw new Error('Failed to load plugin');
   }
+};
+
+type PluginData<D> = { relatedRecordId: string; value: D };
+export type PluginDataStore<T, D> = {
+  data: PluginData<D>[];
+  set: (data: PluginData<D>[]) => void;
+  getById: (row: T) => PluginData<D> | undefined;
 };
