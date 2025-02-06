@@ -25,8 +25,7 @@ const useGetData = ({ data: _can_be_used_in_api_query }: Invoice) => {
   }, []);
 };
 
-const OrderStatusAndInvoiceLines: Plugins = {
-  order: [({ order }) => <div>status: {order.status}</div>],
+const InvoiceLines: Plugins = {
   invoiceColumns: {
     StateLoader: [
       ({ invoice }) => {
@@ -46,4 +45,4 @@ const OrderStatusAndInvoiceLines: Plugins = {
   },
 };
 
-export default OrderStatusAndInvoiceLines;
+export default InvoiceLines;

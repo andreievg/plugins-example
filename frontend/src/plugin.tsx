@@ -1,14 +1,12 @@
 import React, { useEffect } from 'react';
 import { create } from 'zustand';
 import { Invoice, InvoiceColumnData } from './Invoices';
-import { Order } from './Orders';
 import { mergeWith, isArray } from 'lodash';
 import { Column } from './App';
 
 // PLUGIN TYPES
 export type Plugins = {
   invoice?: React.ComponentType<{ invoice: Invoice }>[];
-  order?: React.ComponentType<{ order: Order }>[];
   invoiceColumns?: {
     StateLoader: React.ComponentType<{ invoice: Invoice }>[];
     columns: Column<InvoiceColumnData>[];
